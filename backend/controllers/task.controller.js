@@ -40,3 +40,31 @@ export const createTask = async (req, res) => {
     });
   }
 };
+
+export const getTasks = async(req , res)=>{
+    try {
+        const query = {userId : req.user._id}
+
+        if(req.query.status){
+            query.status = req.query.status
+        }
+        if(req.query.priority){
+           query.priority = req.query.priority
+        }
+
+
+         const tasks = await Task.find(query).sort({ createdAt: -1 })
+         res.status(200).json({
+            success: true,
+            results: tasks.length,
+            data: { tasks },
+
+         })
+    } catch (error) {
+         console.error("Get tasks error:", error.message)
+        res.status(400).json({
+      status: "error",
+      message: error.message,
+    })
+    }
+}
