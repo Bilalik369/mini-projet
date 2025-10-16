@@ -68,3 +68,32 @@ export const getTasks = async(req , res)=>{
     })
     }
 }
+
+export const getTask = async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        msg: "Task not found or you do not have permission to access it"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Task retrieved successfully",
+      data: { task },
+    });
+
+  } catch (error) {
+    console.error("Get task error:", error.message);
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
