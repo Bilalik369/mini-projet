@@ -74,3 +74,23 @@ export const login = async(req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+
+export const getMe = async(req , res)=>{
+    try {
+        const user = await User.findOne(req.user._id)
+        if(!user){
+            return res.status(404).json({msg :'user not found'})
+        }
+        res.status(200).json({
+            success : true,
+            user: user.toPublicJSON(),
+        })
+    } catch (error) {
+        console.error("Get profile error:", error.message)
+        res.status(400).json({
+        status: "error",
+         message: error.message,
+    })
+    }
+}
