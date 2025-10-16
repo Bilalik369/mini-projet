@@ -97,3 +97,41 @@ export const getTask = async (req, res) => {
     });
   }
 };
+
+export const updateTask = async (req, res) => {
+  try {
+    const task = await Task.findOne({
+      _id: req.params.id,
+      userId: req.user._id, 
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        msg: "Task not found or you do not have permission to update it",
+      });
+    }
+
+    const allowedUpdates = ["title", "description", "status", "priority", "dueDate"];
+    allowedUpdates.forEach((field) => {
+      if (req.body[field] !== undefined) { 
+        task[field] = req.body[field];
+      }
+    });
+
+    await task.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Task updated successfully",
+      data: { task },
+    });
+  } catch (error) {
+    console.error("Update task error:", error.message);
+    res.status(400).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
