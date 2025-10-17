@@ -33,6 +33,7 @@ initializeSocketEvents(io)
 
 
 connectdb()
-app.listen(PORT , ()=>{
+httpServer.listen(PORT , ()=>{
     console.log(`Server is running on port ${PORT}`)
+    console.log(`Socket.IO server is ready`)
 })

@@ -1,4 +1,5 @@
-import { error } from "console"
+
+
 
 const userSockets = new Map()
 
@@ -25,3 +26,18 @@ export const initializeSocketEvents = (io)=>{
         })
     })
 }
+
+export const emitTaskCreated = (io, userId, task) => {
+  const socketId = userSockets.get(userId.toString())
+
+  if (socketId) {
+    io.to(socketId).emit("task:created", {
+      type: "success",
+      message: "New task created successfully",
+      task,
+      timestamp: new Date().toISOString(),
+    })
+    console.log(`Task created notification sent to user ${userId}`)
+  }
+}
+

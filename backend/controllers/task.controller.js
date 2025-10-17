@@ -1,13 +1,10 @@
 import Task from "../models/Task.js";
-
+import {emitTaskCreated} from "../events/taskEvents.js"
 
 
 export const createTask = async (req, res) => {
   try {
 
-    
-
-   
     if (!req.body.title) {
       return res.status(400).json({
         success: false,
@@ -24,7 +21,8 @@ export const createTask = async (req, res) => {
       userId: req.user._id,
     });
 
-  
+    emitTaskCreated(req.app.get("io"), req.user._id, task)
+    
     res.status(201).json({
       success: true,
       message: "Task created successfully",
