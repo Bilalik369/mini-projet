@@ -9,9 +9,9 @@ const generateToken = (userId) => {
 
 export const register = async(req, res) => {
   try {
-    const { fullName, email, password, phoneNumber, address, image } = req.body;
+    const { fullName, email, password, phone, address, image } = req.body;
 
-    if (!fullName || !email || !password || !phoneNumber || !address || !image) {
+    if (!fullName || !email || !password) {
       return res.status(400).json({ msg: "Tous les champs sont obligatoires" });
     }
 
@@ -24,17 +24,20 @@ export const register = async(req, res) => {
         fullName,
         email,
         password,
-        phoneNumber,
-        address,
-        image });
+        phoneNumber: phone || "",
+        address: address || "",
+        image: image || "" 
+    });
 
     const token = generateToken(user._id);
 
     res.status(201).json({
       success: true,
       message: "Registration successful",
-      user: user.toPublicJSON(),
-      token,
+      data: {
+        user: user.toPublicJSON(),
+        token,
+      }
     });
 
   } catch (error) {
@@ -65,8 +68,10 @@ export const login = async(req, res) => {
     res.status(200).json({
       success: true,
       message: "Login successful",
-      user: user.toPublicJSON(),
-      token,
+      data: {
+        user: user.toPublicJSON(),
+        token,
+      }
     });
 
   } catch (error) {
