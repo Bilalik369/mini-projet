@@ -41,3 +41,31 @@ export const emitTaskCreated = (io, userId, task) => {
   }
 }
 
+export const emitTaskUpdated = (io, userId, task) => {
+  const socketId = userSockets.get(userId.toString())
+
+  if (socketId) {
+    io.to(socketId).emit("task:updated", {
+      type: "info",
+      message: "Task updated successfully",
+      task,
+      timestamp: new Date().toISOString(),
+    })
+    console.log(`Task updated notification sent to user ${userId}`)
+  }
+}
+
+export const emitTaskDeleted = (io, userId, task) => {
+  const socketId = userSockets.get(userId.toString())
+
+  if (socketId) {
+    io.to(socketId).emit("task:deleted", {
+      type: "warning",
+      message: "Task deleted successfully",
+      task,
+      timestamp: new Date().toISOString(),
+    })
+    console.log(`📤 Task deleted notification sent to user ${userId}`)
+  }
+}
+

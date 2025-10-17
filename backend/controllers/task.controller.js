@@ -1,5 +1,5 @@
 import Task from "../models/Task.js";
-import {emitTaskCreated} from "../events/taskEvents.js"
+import {emitTaskCreated , emitTaskUpdated , emitTaskDeleted} from "../events/taskEvents.js"
 
 
 export const createTask = async (req, res) => {
@@ -119,6 +119,8 @@ export const updateTask = async (req, res) => {
 
     await task.save();
 
+    emitTaskUpdated(req.app.get("io") , req.user._id ,task)
+
     res.status(200).json({
       success: true,
       message: "Task updated successfully",
@@ -146,7 +148,7 @@ export const deleteTask = async (req, res) => {
         msg: "Task not found or you do not have permission to delete it",
       });
     }
-
+    emitTaskDeleted(req.app.get("io") , req.user._id , task)
     res.status(200).json({
       success: true, 
       msg: "Task deleted successfully",
