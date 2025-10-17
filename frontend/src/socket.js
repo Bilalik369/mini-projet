@@ -1,79 +1,85 @@
-import io from "socket.io-client"
+import { io } from "socket.io-client"
 import { useTaskStore } from "./store/taskStore"
-
-const SOCKET_URL = "http://localhost:5000"
 
 let socket = null
 
 export const initializeSocket = () => {
-  if (socket) return socket
-
-  socket = io(SOCKET_URL, {
-    auth: {
-      token: localStorage.getItem("token"),
-    },
-    reconnection: true,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    reconnectionAttempts: 5,
-  })
-
- 
-  socket.on("connect", () => {
-    console.log("[Socket] Connecté au serveur")
-  })
-
+  const token = localStorage.getItem("token")
   
-  socket.on("disconnect", () => {
-    console.log("[Socket] Déconnecté du serveur")
-  })
+  if (!token) {
+    console.log("No token found, skipping socket connection")
+    return
+  }
 
-  socket.on("task:created", (data) => {
-    const store = useTaskStore.getState()
-    store.addNotification({
-      id: Date.now(),
-      type: "success",
-      message: `Nouvelle tâche créée: ${data.title}`,
-      timestamp: new Date(),
+  try {
+    socket = io("http://localhost:4000", {
+      auth: {
+        token: token
+      },
+      transports: ["websocket", "polling"]
     })
-    store.addTask(data)
-  })
 
-  socket.on("task:updated", (data) => {
-    const store = useTaskStore.getState()
-    store.updateTask(data._id, data)
-    store.addNotification({
-      id: Date.now(),
-      type: "info",
-      message: `Tâche mise à jour: ${data.title}`,
-      timestamp: new Date(),
+    socket.on("connect", () => {
+      console.log("Connected to server")
     })
-  })
 
-  
-  socket.on("task:deleted", (data) => {
-    const store = useTaskStore.getState()
-    store.deleteTask(data.id)
-    store.addNotification({
-      id: Date.now(),
-      type: "warning",
-      message: "Tâche supprimée",
-      timestamp: new Date(),
+    socket.on("disconnect", () => {
+      console.log("Disconnected from server")
     })
-  })
 
- 
-  socket.on("error", (error) => {
-    console.error("[Socket] Erreur:", error)
-  })
 
-  return socket
+    socket.emit('authenticate', localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).id : null)
+
+    socket.on("task:created", (data) => {
+      console.log("Task created notification:", data)
+      useTaskStore.getState().addTask(data.task)
+      useTaskStore.getState().addNotification({
+        id: Date.now(),
+        message: data.message,
+        type: data.type,
+        task: data.task,
+        timestamp: data.timestamp
+      })
+    })
+
+    socket.on("task:updated", (data) => {
+      console.log("Task updated notification:", data)
+      useTaskStore.getState().updateTask(data.task._id, data.task)
+      useTaskStore.getState().addNotification({
+        id: Date.now(),
+        message: data.message,
+        type: data.type,
+        task: data.task,
+        timestamp: data.timestamp
+      })
+    })
+
+    socket.on("task:deleted", (data) => {
+      console.log("Task deleted notification:", data)
+      useTaskStore.getState().deleteTask(data.task._id)
+      useTaskStore.getState().addNotification({
+        id: Date.now(),
+        message: data.message,
+        type: data.type,
+        task: data.task,
+        timestamp: data.timestamp
+      })
+    })
+
+    socket.on("error", (error) => {
+      console.error("Socket error:", error)
+    })
+
+  } catch (error) {
+    console.error("Failed to initialize socket:", error)
+  }
 }
 
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect()
     socket = null
+    console.log("Socket disconnected")
   }
 }
 
